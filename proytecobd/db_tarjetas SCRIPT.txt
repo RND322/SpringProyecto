@@ -1,0 +1,197 @@
+CREATE TABLE genero ( 
+idGenero NUMBER PRIMARY KEY,
+descripGenero VARCHAR2(15)
+);
+
+CREATE TABLE estadoCivil( 
+idEstadoCivil NUMBER PRIMARY KEY,
+descripEstadoCivil VARCHAR2(15)
+);
+
+
+CREATE TABLE departamento ( 
+idDepto NUMBER PRIMARY KEY,
+nombreDepto VARCHAR2(50)
+);
+
+CREATE TABLE sucursal( 
+idSucursal NUMBER PRIMARY KEY,
+nombreSucursal VARCHAR2(100)
+);
+
+CREATE TABLE estadoSolicitud( 
+idEstadoSoli NUMBER PRIMARY KEY,
+descripEstadoSoli VARCHAR2(50)
+);
+
+CREATE TABLE estadoTarjeta( 
+idEstadoTarjeta NUMBER PRIMARY KEY,
+tipoEstado VARCHAR2(30)
+);
+
+CREATE TABLE marca( 
+idMarca NUMBER PRIMARY KEY,
+nombreMarca VARCHAR2(50)
+);
+
+CREATE TABLE moneda( 
+idMoneda NUMBER PRIMARY KEY,
+nombreMoneda VARCHAR2(50)
+);
+
+CREATE TABLE ciudad( 
+idCiudad NUMBER PRIMARY KEY,
+nombreCiudad VARCHAR2(50),
+idDepto NUMBER,
+CONSTRAINT idDeptoFK FOREIGN KEY(idDepto) REFERENCES departamento(idDepto)
+);
+
+CREATE TABLE empleado( 
+idEmpleado VARCHAR2(15) PRIMARY KEY,
+usuarioE VARCHAR2(15),
+primerNombre VARCHAR2(50),
+primerApellido VARCHAR2(50),
+cargo VARCHAR2(50),
+idSucursal NUMBER,
+CONSTRAINT idSucursalFK FOREIGN KEY(idSucursal) REFERENCES sucursal(idSucursal)
+);
+
+CREATE TABLE cliente( 
+dni VARCHAR2(15) PRIMARY KEY,
+usuarioC VARCHAR2(15),
+primerNombre VARCHAR2(50),
+segundoNombre VARCHAR2(50),
+primerApellido VARCHAR2(50),
+segundoApellido VARCHAR2(50),
+correo VARCHAR2(100),
+idEstadoCivil NUMBER,
+idGenero NUMBER,
+CONSTRAINT idEstadoCivilFK FOREIGN KEY(idEstadoCivil) REFERENCES estadoCivil(idEstadoCivil),
+CONSTRAINT idGeneroFK FOREIGN KEY(idGenero) REFERENCES genero(idGenero)
+);
+
+CREATE TABLE direccion( 
+idDireccion NUMBER PRIMARY KEY,
+idCiudad NUMBER,
+dni VARCHAR2(15),
+CONSTRAINT idCiudadDirFK FOREIGN KEY(idCiudad) REFERENCES ciudad(idCiudad),
+CONSTRAINT dniDireccionFK FOREIGN KEY(dni) REFERENCES cliente(dni)
+);
+
+CREATE TABLE datosLaborales ( 
+idDatosLaborales NUMBER PRIMARY KEY,
+cargo VARCHAR2(50),
+ingresoMensual NUMBER(15,2),
+nombreLugarTrabajo VARCHAR2(100),
+fechaIngresoTrabajo DATE,
+dni VARCHAR2(15),
+CONSTRAINT dniLaboralesFK FOREIGN KEY(dni) REFERENCES cliente(dni)
+);
+
+CREATE TABLE telefono( 
+idTelefono VARCHAR2(15) PRIMARY KEY,
+telefonoHogar VARCHAR2(15),
+telefonoCelular VARCHAR2(15),
+dni VARCHAR2(15),
+CONSTRAINT dniTelefonoFK FOREIGN KEY(dni) REFERENCES cliente(dni)
+);
+
+CREATE TABLE tipoProducto( 
+idTipoProducto NUMBER PRIMARY KEY,
+nombreProducto VARCHAR2(50),
+limiteCredito NUMBER,
+idMarca NUMBER,
+CONSTRAINT idMarcaFK FOREIGN KEY(idMarca) REFERENCES marca(idMarca)
+);
+
+
+CREATE TABLE solicitud( 
+idSolicitud VARCHAR2(10) PRIMARY KEY,
+dni VARCHAR2(15),
+idEmpleado VARCHAR2(15),
+idTipoProducto NUMBER,
+idEstadoSoli NUMBER,
+CONSTRAINT dniSoliFK FOREIGN KEY(dni) REFERENCES cliente(dni),
+CONSTRAINT idEmpleadoSoliFK FOREIGN KEY(idEmpleado) REFERENCES empleado(idEmpleado),
+CONSTRAINT idTipoProducSoliFK FOREIGN KEY(idTipoProducto) REFERENCES tipoProducto(idTipoProducto),
+CONSTRAINT idEstadoSoliFK FOREIGN KEY(idEstadoSoli) REFERENCES estadoSolicitud(idEstadoSoli)
+);
+
+CREATE TABLE referenciasPersonales( 
+idRefPersonales NUMBER PRIMARY KEY,
+primerNombre VARCHAR2(50),
+primerApellido VARCHAR2(50),
+telResi VARCHAR2(15),
+telCel VARCHAR2(15),
+relacionSolicitante VARCHAR2(30),
+idSolicitud VARCHAR2(10),
+CONSTRAINT idSolicitudFK FOREIGN KEY(idSolicitud) REFERENCES solicitud(idSolicitud)
+);
+
+CREATE TABLE tarjeta( 
+idTarjeta NUMBER PRIMARY KEY,
+fechaApertura DATE,
+fechaVencimiento DATE,
+fechaCorte DATE,
+pin NUMBER,
+saldoActual NUMBER(15,2),
+saldoDisponible NUMBER(15,2),
+pagoMinimo NUMBER(15,2),
+fechaLimitePago DATE,
+tasaInteresAnual NUMBER(5,2),
+idTipoProducto NUMBER,
+dni VARCHAR2(15),
+idEstadoTarjeta NUMBER,
+CONSTRAINT idTipoProducTarjeFK FOREIGN KEY(idTipoProducto) REFERENCES tipoProducto(idTipoProducto),
+CONSTRAINT dniTarjetaFK FOREIGN KEY(dni) REFERENCES cliente(dni),
+CONSTRAINT idEstadoTarjetaFK FOREIGN KEY(idEstadoTarjeta) REFERENCES estadoTarjeta(idEstadoTarjeta)
+);
+
+
+CREATE TABLE mora( 
+idMora NUMBER PRIMARY KEY,
+saldoVencido NUMBER(15,2),
+tasaInteresMora NUMBER(3,2),
+idTarjeta NUMBER,
+CONSTRAINT idTarjetaMoraFK FOREIGN KEY(idTarjeta) REFERENCES tarjeta(idTarjeta)
+);
+
+CREATE TABLE registroCuota(
+idRegistroCuota NUMBER PRIMARY KEY,
+idMora NUMBER,
+idTarjeta NUMBER,
+numeroCuota NUMBER,
+CONSTRAINT idMoraCuotaFK FOREIGN KEY (idMora) REFERENCES mora(idMora),
+CONSTRAINT idTarjetaCuotaFK FOREIGN KEY (idTarjeta) REFERENCES tarjeta(idTarjeta)
+);
+
+
+CREATE TABLE transaccion(
+idTransac NUMBER PRIMARY KEY,
+noReferencia VARCHAR2(15),
+fechaTransaccion DATE,
+concepto VARCHAR2(100),
+monto NUMBER(15,2),
+idMoneda NUMBER,
+CONSTRAINT idMonedaTransacFK FOREIGN KEY (idMoneda) REFERENCES moneda(idMoneda)
+);
+
+CREATE TABLE historialTransaccion(
+idHistorialTransaccion NUMBER PRIMARY KEY,
+idTarjeta NUMBER,
+idTransac NUMBER,
+CONSTRAINT idTarjetaHistorialFK FOREIGN KEY (idTarjeta) REFERENCES tarjeta(idTarjeta),
+CONSTRAINT idTransacHostorialFK FOREIGN KEY (idTransac) REFERENCES transaccion(idTransac)
+);
+
+
+CREATE TABLE estadoCuenta(
+idEstadoCuenta NUMBER PRIMARY KEY,
+saldoAnterior NUMBER(15,2),
+compras NUMBER(15,2),
+abonos NUMBER(15,2),
+interesesAdeudados NUMBER(15,2),
+estadoMora NUMBER(1),
+idTarjeta NUMBER,
+CONSTRAINT idTarjetaEstadoCuentaFK FOREIGN KEY (idTarjeta) REFERENCES tarjeta(idTarjeta)
+);
